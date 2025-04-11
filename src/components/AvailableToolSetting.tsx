@@ -3,10 +3,8 @@
 import { forwardRef, useImperativeHandle, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@euroland/ci-shadcn-styleguide";
 import { z } from "zod";
-
-import CompanyCode from "./CompanyCode";
 
 const FormSchema = z.object({
   company: z.string().min(1, "Company name is required"),
@@ -68,7 +66,6 @@ const AvailableToolSetting = forwardRef(
               <FormItem className="flex-1">
                 <FormLabel>Company name</FormLabel>
                 <FormControl>
-                  <CompanyCode {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -1,24 +1,28 @@
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-import { useInstrumentSelector } from "@/hooks/useInstrumentSelector";
-import { useDispatch } from "react-redux";
-import { setInstrumentDefault } from "@/store/slice/settings";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@euroland/ci-shadcn-styleguide"
+import { useStore } from "../store/useStore";
 
 function DefaultIntrument() {
-  const { selectorIntrusment } = useInstrumentSelector();
-  const dispatch = useDispatch();
-  const handleSetInstrumentDefault = (id: string) => dispatch(setInstrumentDefault(id));
-  const { instrumentDefault } = useSelector((state: RootState) => state.settings);
+  const selectedInstruments = useStore(state => state.selectedInstruments);
+  const defaultInstrument = useStore(state => state.defaultInstrument);
+  const setDefaultInstrument = useStore(state => state.setDefaultInstrument);
+  
+  const handleSetInstrumentDefault = (id: string) => {
+    const instrument = selectedInstruments.find(inst => inst.id === id) || null;
+    setDefaultInstrument(instrument);
+  };
+
   return (
     <div>
-      <Select value={instrumentDefault || selectorIntrusment?.[0]?.id} onValueChange={handleSetInstrumentDefault}>
+      <Select 
+        value={defaultInstrument?.id || selectedInstruments[0]?.id}
+        onValueChange={handleSetInstrumentDefault}
+      >
         <SelectTrigger className="w-full bg-white border-gray-300">
           <SelectValue placeholder="Select an instrument" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            {selectorIntrusment?.map((instrument: any) => (
+            {selectedInstruments?.map((instrument) => (
               <SelectItem key={instrument.id} value={instrument.id}>
                 {instrument.symbol}
               </SelectItem>
@@ -26,7 +30,6 @@ function DefaultIntrument() {
           </SelectGroup>
         </SelectContent>
       </Select>
-
     </div>
   )
 }

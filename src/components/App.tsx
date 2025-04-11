@@ -1,29 +1,19 @@
 import { useCallback, useRef, useState } from "react";
-import {
-  ResizablePanelGroup,
-  ResizablePanel,
-  ResizableHandle,
-} from "../components/ui/resizable";
 
 import GeneralSettings from "./GeneralSettings";
 import PreviewTools from "./PreviewTools";
 import useResize from "../hooks/useResize";
 import ShareGraphSetting from "./ShareGraphSetting";
 import KeyFormContext from "../context/KeyFormContext";
-import { store } from "../store";
-import { useDispatch } from "react-redux";
-import clsx from "clsx";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@euroland/ci-shadcn-styleguide";
 import { cssModulePrefix } from "../configs/cssModulePrefix";
+import clsx from "clsx";
 
 const App = () => {
   const [key, setKey] = useState("");
   const handleToolIFrameRef = useRef<any>(null);
-  const handleAvailableToolRef = useRef<any>(null);
-  const handleGeneralSettingsRef = useRef<any>(null);
 
-  const dispatch = useDispatch();
 
-  const availableTools = store.getState().forms.availableTools;
   const { width } = useResize();
 
   const onChangeFormKey = useCallback(
@@ -33,8 +23,8 @@ const App = () => {
 
   const isMobile = width < 768;
   return (
-    <div className="flex flex-col" key={key}>
-      <div className="w-full shadow-md h-[calc(100vh-112px)]">
+      <div className={clsx(cssModulePrefix, "w-full shadow-md ")}>
+        <div className="h-[calc(100vh-112px)]">
         <KeyFormContext.Provider value={{ key, onChangeFormKey }}>
           <ResizablePanelGroup
             direction={isMobile ? "vertical" : "horizontal"}
@@ -65,8 +55,8 @@ const App = () => {
             </ResizablePanel>
           </ResizablePanelGroup>
         </KeyFormContext.Provider>
+        </div>
       </div>
-    </div>
   );
 }
 

@@ -1,15 +1,9 @@
-import { forwardRef, useMemo, useState } from "react";
+import React, { forwardRef, useMemo, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { cn } from "../../lib/utils";
 import { useForwardedRef } from "../../lib/use-forwarded-ref";
-import { Button } from "../ui/button";
 import type { ComponentProps } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "../ui/popover";
-import { Input } from "../ui/input";
+import { Button, Input, Popover, PopoverContent, PopoverTrigger } from "@euroland/ci-shadcn-styleguide";
 
 interface ColorPickerProps {
   value: string;
@@ -23,7 +17,7 @@ const ColorPicker = forwardRef<
     ColorPickerProps
 >(
   (
-    { disabled, value, onChange, onBlur, name, className, ...props },
+    { disabled, value, onChange, onBlur, className },
     forwardedRef
   ) => {
     const ref = useForwardedRef(forwardedRef);
@@ -43,12 +37,10 @@ const ColorPicker = forwardRef<
             )}
             onClick={() => setOpen(true)}
           >
-            {/* Ô vuông màu */}
             <div
               className="h-5 w-5 rounded-md border"
               style={{ backgroundColor: parsedValue }}
             />
-            {/* Text mã màu */}
             <span className="text-sm font-mono">
               {parsedValue.toUpperCase()}
             </span>
@@ -67,6 +59,5 @@ const ColorPicker = forwardRef<
     );
   }
 );
-ColorPicker.displayName = "ColorPicker";
 
-export { ColorPicker };
+export default React.memo(ColorPicker);

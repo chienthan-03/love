@@ -297,3 +297,26 @@ export const DEFAULT_STORE_CHART_SETTINGS = {
   [CHART_SETTING_KEYS.SHOW_LAST_CLOSE_LINE.key]: [],
   [CHART_SETTING_KEYS.TABLE_VIEW.key]: [],
 };
+
+export const periodToDisplayLabel = {
+    "1D": "1 Day",
+    "5D": "5 Days",
+    "1M": "1 Month",
+    "3M": "3 Months",
+    "6M": "6 Months",
+    "1Y": "1 Year",
+    "5Y": "5 Years",
+    "10Y": "10 Years",
+}
+
+export const intervalToDisplayLabel = {
+    "1m": "1 minute",
+    "5m": "5 minutes",
+    "10m": "10 minutes",
+    "15m": "15 minutes",
+    "30m": "30 minutes",
+    "1h": "1 hour",
+    daily: "Daily",
+    weekly: "Weekly",
+    monthly: "Monthly",
+}

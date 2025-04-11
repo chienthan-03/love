@@ -1,18 +1,26 @@
-import { useRef } from "react";
-import { ColorPicker } from "./ui/PickColor";
+import ColorPicker from "./ui/PickColor";
 import MultiSelectTable from "./ui/MutipleSelectTable";
 import DefaultInstrument from "./DefaultIntrument";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/store";
-import { setColor } from "@/store/slice/settings";
+import { useStore } from "../store/useStore";
+import FontSelector from "./ui/FrontSelector";
+import { debounce } from "es-toolkit";
+
+
+function SettingField({ label, children, className }: { label: string; children: React.ReactNode; className?: string }) {
+  return (
+    <div className={className}>
+      <label className="text-sm block mb-1">{label}</label>
+      {children}
+    </div>
+  );
+}
 
 export default function GeneralSettings() {
-  const { color } = useSelector((state: RootState) => state.settings);
-  const dispatch = useDispatch();
-
-  const primaryColorRef = useRef(color.primaryColor);
-  const fontColorRef = useRef(color.fontColor);
-
+  const colors = useStore(state => state.colors);
+  const setColors = useStore(state => state.setColors);
+  const debounceSetColors = debounce((newColors: Partial<typeof colors>) => {
+    setColors(newColors);
+  }, 500);
   return (
     <div className="space-y-4">
       <div>
@@ -26,26 +34,42 @@ export default function GeneralSettings() {
       </div>
 
       <div>
-        <h3 className="mb-2 text-sm font-medium">Primary Color</h3>
-        <ColorPicker
-          value={color.primaryColor}
-          onChange={(v) => {
-            primaryColorRef.current = v;
-          }}
-          onBlur={() => {
-            dispatch(setColor({ primaryColor: primaryColorRef.current }));
-          }}
-        />
-        <h3 className="mb-2 text-sm font-medium">Font Color</h3>
-        <ColorPicker
-          value={color.fontColor}
-          onChange={(v) => {
-            fontColorRef.current = v;
-          }}
-          onBlur={() => {
-            dispatch(setColor({ fontColor: fontColorRef.current }));
-          }}
-        />
+        <h3 className="mb-2 text-sm font-medium">Colors</h3>
+        <div className="space-y-4">
+          <div className="flex flex-row gap-4">
+            <SettingField label="Primary Color">
+              <ColorPicker 
+                value={colors.primaryColor}
+                onChange={(color) => debounceSetColors({ primaryColor: color })}
+              />
+            </SettingField>
+            <SettingField label="Font Color">
+              <ColorPicker 
+                value={colors.fontColor}
+                onChange={(color) => debounceSetColors({ fontColor: color })}
+              />
+            </SettingField>
+          </div>
+
+          <SettingField label="Font Style">
+            <FontSelector />
+          </SettingField>
+
+          <div className="flex flex-row gap-4">
+            <SettingField label="Up Color">
+              <ColorPicker
+                value={colors.upColor}
+                onChange={(color) => debounceSetColors({ upColor: color })}
+              />
+            </SettingField>
+            <SettingField label="Down Color">
+              <ColorPicker 
+                value={colors.downColor}
+                onChange={(color) => debounceSetColors({ downColor: color })}
+              />
+            </SettingField>
+          </div>
+        </div>
       </div>
     </div>
   );

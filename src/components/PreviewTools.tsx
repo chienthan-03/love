@@ -1,74 +1,42 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState } from "react";
 import { stringifyParamsToURL } from "../utils";
-import { useAppStore } from "../hooks/useAppStore";
-import {pickBy} from "es-toolkit";
+import { IDateRangeAndInterval, useStore } from "../store/useStore";
+import { pickBy } from "es-toolkit";
+import { appDataContext } from "@euroland/ci-utils";
+
+const getDateRangesAndIntervalStr = (dateRangesAndInterval : IDateRangeAndInterval[]) => {
+  return dateRangesAndInterval
+    .map(({ period, intervals }) => `${period}|${intervals.join(",")}`)
+    .join(";");
+};
 
 function ToolIFrame({ handleRef }) {
   const [url, setURL] = useState("");
   const ref = useRef(null);
-  const store = useAppStore();
-  const getDateRangesAndIntervalStr = (dateRangesAndInterval = []) => {
-    return dateRangesAndInterval
-      .map(({ period, intervals }) => `${period}|${intervals.join(",")}`)
-      .join(";");
-  };
-  console.log({aaaaa: store.getState()});
   
-  const getUnControllerUIParams = (controllerUI = {}) => {
-    return Object.keys(controllerUI)
-      .filter((key) => !controllerUI[key])
-      .join(",");
-  };
-
+  const selectedInstruments = useStore(state => state.selectedInstruments);
+  const defaultInstrument = useStore(state => state.defaultInstrument);
+  const dateRangesAndInterval = useStore(state => state.dateRangesAndInterval);
+  const colors = useStore(state => state.colors);
+  const front = useStore(state => state.front);
+  
+  const { companyCode } = appDataContext.get()
+  console.log("companyCode", companyCode);
+  
   const getNewURL = () => {
-    const formState = store.getState().forms;
-    const availableTools =
-      formState.availableTools.draft ?? formState.availableTools.initState;
-    const generalSettings =
-      formState.generalSettings.draft ?? formState.generalSettings.initState;
-    const shareGraph =
-      formState.tools.shareGraph.draft ?? formState.tools.shareGraph.initState;
     const newURL = stringifyParamsToURL(
       pickBy(
         {
-          companyCode: availableTools.company?.value,
-          instrumentIds: generalSettings.instrumentIds.join(","),
-          realtimeIds: generalSettings.instrumentIds.join(","),
-          defaultSelectedInstrumentId:
-            generalSettings.defaultSelectedInstrumentId,
-          // width: generalSettings.size.width,
-          // height: generalSettings.size.height,
-          // locale: generalSettings.general.locale,
-          fontFamily: generalSettings.general.fontFamily,
-          fontSize: generalSettings.general.fontSize,
-          fontColor: generalSettings.general.fontColor,
-          upColor: generalSettings.general.upColor,
-          downColor: generalSettings.general.downColor,
-          primaryColor: generalSettings.general.primaryColor,
-          gridColor: shareGraph.chartConfiguration.gridColor,
-          axesFontsize: shareGraph.chartConfiguration.axesFontsize,
-          axesColor: shareGraph.chartConfiguration.axesColor,
-          chartType: shareGraph.chartConfiguration.chartType,
-          "chart-preferences":
-            shareGraph.chartConfiguration["chart-preferences"],
-          "y-axis-preferences":
-            shareGraph.chartConfiguration["y-axis-preferences"],
-          volume: shareGraph.chartConfiguration.volume,
-          // tooltip: shareGraph.chartConfiguration.tooltip,
-          "show-last-close-line":
-            shareGraph.chartConfiguration["show-last-close-line"],
-          // "table-view": shareGraph.chartConfiguration["table-view"],
-          // valueTracking: shareGraph.valueTracking,
-          // dataFields: shareGraph.tickerSettings.dataFields,
-          // template: shareGraph.tickerSettings.template,
-          refreshTickerTime: shareGraph.tickerSettings.refreshTickerTime,
-          defaultRange: `${shareGraph.defaultRange.period},${shareGraph.defaultRange.interval}`,
-          dateRangesAndInterval: getDateRangesAndIntervalStr(
-            shareGraph.dateRangesAndInterval
-          ),
-          customRange: shareGraph.customRange && null,
-          unControllerUI: getUnControllerUIParams(shareGraph.controllerUI),
-          events: shareGraph.events,
+          companyCode,
+          instrumentIds: selectedInstruments.map(inst => inst.id).join(","),
+          defaultSelectedInstrumentId: defaultInstrument?.id,
+          fontColor: colors.fontColor,
+          primaryColor: colors.primaryColor,
+          upColor: colors.upColor,
+          downColor: colors.downColor,
+          fontFamily: front.fontFamily,
+          fontSize: front.fontSize,
+          dateRangesAndInterval: getDateRangesAndIntervalStr(dateRangesAndInterval)
         },
         (value) => !!value || typeof value === "boolean"
       )
@@ -78,22 +46,22 @@ function ToolIFrame({ handleRef }) {
 
   useEffect(() => {
     setURL(getNewURL());
-  }, []);
+  }, [selectedInstruments, defaultInstrument, colors, front, dateRangesAndInterval]);
 
   useImperativeHandle(
     handleRef,
     () => ({
-      onReload: (formState) => {
-        // ref.current.src = getNewURL();
+      onReload: () => {
         setURL(getNewURL());
       },
     }),
-    []
+    [selectedInstruments, defaultInstrument, colors, front, dateRangesAndInterval]
   );
+
   return (
     <div className="h-full">
       <div className="flex flex-col h-full gap-2">
-        <div className=" flex-1">
+        <div className="flex-1">
           <iframe
             ref={ref}
             width="100%"

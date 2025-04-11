@@ -1,39 +1,35 @@
-import { useState, useEffect, useMemo, Fragment } from "react";
+import React, { useState, useEffect, useMemo, Fragment } from "react";
 import { X, Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "../ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Checkbox } from "../ui/checkbox";
-import { Badge } from "../ui/badge";
-import { useInstruments } from "../../hooks/useInstruments";
-import { useInstrumentSelector } from "@/hooks/useInstrumentSelector";
+import { Badge, Button, Checkbox, Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, Input } from "@euroland/ci-shadcn-styleguide";
+import { useStore } from "../../store/useStore";
+import { appDataContext } from "@euroland/ci-utils";
 
 const ITEMS_PER_PAGE = 10;
 const INITIAL_SELECTED_COUNT = 3;
 
-export default function MultiSelectTable() {
+const MultiSelectTable = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [instruments, setInstruments] = useState<any[]>([]);
-  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [instrumentsWithChecked, setInstrumentsWithChecked] = useState<any[]>([]);
 
-  const { instruments: rawInstruments } = useInstruments();
-  const { setInstrumentSelector } = useInstrumentSelector();
+  // Use primitive selectors to avoid infinite loops
+  const instrumentsData = useStore(state => state.instruments.data);
+  const loading = useStore(state => state.instruments.loading);
+  const selectedInstruments = useStore(state => state.selectedInstruments);
+  const setSelectedInstruments = useStore(state => state.setSelectedInstruments);
+  const fetchInstruments = useStore(state => state.fetchInstruments);
+  const { companyCode  } = appDataContext.get();
+  // Memoize the instruments array
+  const instruments = useMemo(() => Object.values(instrumentsData), [instrumentsData]);
 
   useEffect(() => {
-    setInstrumentSelector({ selectedInstruments: selectedItems });
-  }, [selectedItems, setInstrumentSelector]);
+    fetchInstruments(companyCode);
+  }, [fetchInstruments]);
 
   useEffect(() => {
-    if (rawInstruments.length > 0 && instruments.length === 0) {
-      const mapped = rawInstruments.map((instrument: any) => ({
+    if (instruments.length > 0 && instrumentsWithChecked.length === 0) {
+      const mapped = instruments.map((instrument: any) => ({
         ...instrument,
         checked: false,
       }));
@@ -41,13 +37,13 @@ export default function MultiSelectTable() {
       const updated = mapped.map((item: any, index: number) =>
         index < INITIAL_SELECTED_COUNT ? { ...item, checked: true } : item
       );
-      setInstruments(updated);
-      setSelectedItems(updated.slice(0, INITIAL_SELECTED_COUNT));
+      setInstrumentsWithChecked(updated);
+      setSelectedInstruments(updated.slice(0, INITIAL_SELECTED_COUNT));
     }
-  }, [rawInstruments, instruments.length]);
+  }, [instruments, instrumentsWithChecked.length, setSelectedInstruments]);
 
   const filteredInstruments = useMemo(() => {
-    return instruments.filter((item) => {
+    return instrumentsWithChecked.filter((item) => {
       const query = searchQuery.toLowerCase();
       return (
         item?.name?.toLowerCase().includes(query) ||
@@ -56,7 +52,7 @@ export default function MultiSelectTable() {
         item?.isin?.toLowerCase().includes(query)
       );
     });
-  }, [instruments, searchQuery]);
+  }, [instrumentsWithChecked, searchQuery]);
 
   const totalPages = Math.ceil(filteredInstruments.length / ITEMS_PER_PAGE);
   const paginatedInstruments = useMemo(() => {
@@ -65,7 +61,7 @@ export default function MultiSelectTable() {
   }, [filteredInstruments, currentPage]);
 
   const handleCheckboxChange = (id: string) => {
-    setInstruments((prev) =>
+    setInstrumentsWithChecked((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, checked: !item.checked } : item
       )
@@ -75,16 +71,16 @@ export default function MultiSelectTable() {
   const handleOpenDialog = () => setIsOpen(true);
 
   const handleConfirm = () => {
-    const newSelectedItems = instruments.filter((item) => item.checked);
-    setSelectedItems(newSelectedItems);
+    const newSelectedItems = instrumentsWithChecked.filter((item) => item.checked);
+    setSelectedInstruments(newSelectedItems);
     setIsOpen(false);
   };
 
   const handleCancel = () => {
-    setInstruments((prev) =>
+    setInstrumentsWithChecked((prev) =>
       prev.map((item) => ({
         ...item,
-        checked: selectedItems.some(
+        checked: selectedInstruments.some(
           (selected: any) => selected.id === item.id
         ),
       }))
@@ -93,8 +89,8 @@ export default function MultiSelectTable() {
   };
 
   const handleRemoveTag = (id: string) => {
-    setSelectedItems((prev) => prev.filter((item) => item.id !== id));
-    setInstruments((prev) =>
+    setSelectedInstruments(selectedInstruments.filter(item => item.id !== id));
+    setInstrumentsWithChecked((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, checked: false } : item
       )
@@ -102,7 +98,7 @@ export default function MultiSelectTable() {
   };
 
   const handleSelectAllPage = (checked: boolean) => {
-    setInstruments((prev) =>
+    setInstrumentsWithChecked((prev) =>
       prev.map((item) =>
         paginatedInstruments.some((pageItem) => pageItem.id === item.id)
           ? { ...item, checked }
@@ -111,15 +107,18 @@ export default function MultiSelectTable() {
     );
   };
 
+  if (loading) {
+    return <div>Loading instruments...</div>;
+  }
+
   return (
     <Fragment>
-      {/* Hiển thị danh sách thẻ đã chọn */}
       <div
-        className="border rounded-md p-2 min-h-10 flex flex-wrap gap-2 cursor-pointer"
+        className="border rounded-md p-1 min-h-10 flex flex-wrap gap-2 cursor-pointer"
         onClick={handleOpenDialog}
       >
-        {selectedItems.length > 0 ? (
-          selectedItems.map((item: any) => (
+        {selectedInstruments.length > 0 ? (
+          selectedInstruments.map((item: any) => (
             <Badge
               key={item.id}
               variant="secondary"
@@ -142,7 +141,6 @@ export default function MultiSelectTable() {
         )}
       </div>
 
-      {/* Dialog chọn instrument */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-fit w-[825px]">
           <DialogHeader>
@@ -192,7 +190,7 @@ export default function MultiSelectTable() {
                   </td>
                   <td className="p-2">{item.name}</td>
                   <td className="p-2">{item.symbol}</td>
-                  <td className="p-2">{item.realTimeData}</td>
+                  <td className="p-2">{item.allowRealTime}</td>
                   <td className="p-2">{item.marketName}</td>
                   <td className="p-2">{item.isin}</td>
                 </tr>
@@ -268,3 +266,5 @@ export default function MultiSelectTable() {
     </Fragment>
   );
 }
+
+export default React.memo(MultiSelectTable);

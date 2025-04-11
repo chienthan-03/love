@@ -48,22 +48,6 @@ declare module "@euroland/ci-utils" {
   export const appDataContext: any;
 }
 
-declare module "@euroland/ci-shadcn-styleguide" {
-  export const Button: any;
-  export const Dialog: any;
-  export const DialogContent: any;
-  export const DialogHeader: any;
-  export const DialogTitle: any;
-  export const DialogFooter: any;
-  export const Input: any;
-  export const Checkbox: any;
-  export const Badge: any;
-  export const X: any;
-  export const Search: any;
-  export const ChevronLeft: any;
-  export const ChevronRight: any;
-}
-
 declare module '*.css' {
   const content: { [className: string]: string };
   export default content;
